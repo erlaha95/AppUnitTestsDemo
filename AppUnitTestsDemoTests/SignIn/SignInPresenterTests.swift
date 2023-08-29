@@ -11,43 +11,49 @@ import XCTest
 
 final class SignInPresenterTests: XCTestCase {
     
-    func test_signIn_serviceSignInCalled() {
+    func test_signIn_Failure() throws {
         // given
-        let (presenter, serviceSpy) = makeSUT()
-        let signInUser = anySignInUser()
+        let mockService = MockSignInService()
+        let view = SpySignInView()
+        let presenter = SignInPresenterImpl(service: mockService)
+        presenter.view = view
         
         // when
-        presenter.signIn(user: signInUser)
+        mockService.resultToReturn = .failure(.userDoesNotExist)
+        presenter.signIn(user: .stub)
         
         // then
-        XCTAssertEqual(signInUser, serviceSpy.signInUser)
-    }
-    
-    private func makeSUT() -> (SignInPresenter, SignInServiceSpy) {
-        let service = SignInServiceSpy()
-        let presenter = SignInPresenterImpl(service: service)
-        return (presenter, service)
-    }
-    
-    private func anySignInUser() -> SignInUser {
-        SignInUser(username: "", password: "")
-    }
-    
-    private func user(for signInUser: SignInUser) -> User {
-        User(id: "", username: signInUser.username, firstName: "", lastName: "", age: 0)
+        let alertData = try XCTUnwrap(view.alertData)
+        XCTAssertEqual(alertData.title, "Error")
+        XCTAssertEqual(alertData.message, SignInError.userDoesNotExist.localizedDescription)
     }
 }
 
-final class SignInServiceSpy: SignInService {
+extension SignInUser {
+    static let stub = SignInUser(username: "abc", password: "123")
+}
+
+class MockSignInService: SignInService {
     
-    var signInUser: SignInUser?
+    var resultToReturn: Result<User, SignInError>?
     
     func signIn(user: SignInUser, completion: @escaping (Result<User, SignInError>) -> Void) {
-        signInUser = user
+        guard let resultToReturn else { return }
+        completion(resultToReturn)
     }
 }
 
-extension SignInUser: Equatable{
+class SpySignInView: SignInViewProtocol {
+    
+    var alertData: (title: String, message: String)?
+    
+    func showAlert(title: String, message: String) {
+        alertData = (title, message)
+    }
+}
+
+extension SignInUser: Equatable {
+    
     public static func == (lhs: SignInUser, rhs: SignInUser) -> Bool {
         lhs.username == rhs.username && lhs.password == rhs.password
     }

@@ -8,10 +8,10 @@
 
 import Foundation
 
-enum SignInError: LocalizedError {
+enum SignInError: LocalizedError, Equatable {
+    
     case userDoesNotExist
     case wrongCredentials
-    case network(NetworkError)
     
     var errorDescription: String? {
         switch self {
@@ -19,8 +19,6 @@ enum SignInError: LocalizedError {
             return "User does not exist"
         case .wrongCredentials:
             return "Wrong credentials"
-        case .network(let networkError):
-            return networkError.localizedDescription
         }
     }
 }

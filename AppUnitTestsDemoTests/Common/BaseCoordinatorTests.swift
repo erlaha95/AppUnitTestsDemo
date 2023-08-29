@@ -19,6 +19,6 @@ final class BaseCoordinatorTests: XCTestCase {
         parentCoordinator.add(childCoordinator: childCoordinator)
         
         // then
-        parentCoordinator.childCoordinators.contains(where: { $0 === childCoordinator })
+        XCTAssertTrue(parentCoordinator.childCoordinators.contains(where: { $0 === childCoordinator }))
     }
 }
